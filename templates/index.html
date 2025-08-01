@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Workforce Productivity & Burnout Analyzer</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #d4af37, #c0c0c0); /* Gold-Gray Background */
+            margin: 0;
+            padding: 0;
+            color: #000; /* Dark Black Text */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 35px 40px;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            width: 500px;
+            max-width: 95%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 22px;
+            margin-bottom: 8px;
+            color: #000;
+        }
+
+        p {
+            font-size: 14px;
+            margin-bottom: 20px;
+            color: #000;
+        }
+
+        .form-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group.single {
+            grid-template-columns: 1fr;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+            background: #f8f8f8;
+            color: #000;
+            font-size: 14px;
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        input::placeholder {
+            color: #555;
+        }
+
+        input:focus {
+            background: #fff;
+            border-color: #007bff;
+            box-shadow: 0 0 6px rgba(0, 123, 255, 0.5);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #0056b3, #007bff);
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.6);
+            transform: scale(1.03);
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 15px;
+            text-decoration: none;
+            color: #007bff; /* Blue links */
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        a:hover {
+            filter: blur(1px); /* Blur on hover */
+        }
+
+        .footer {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            font-weight: bold;
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 13px;
+        }
+
+        .footer a {
+            color: #007bff;
+            text-decoration: none;
+            margin: 0 5px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .footer a:hover {
+            filter: blur(1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI-Based Workforce Productivity & Burnout Analyzer</h1>
+        <p>Enter employee details to analyze productivity and burnout risk.</p>
+        
+        <form action="/predict" method="POST">
+            <!-- Row 1 -->
+            <div class="form-group single">
+                <input type="text" name="name" placeholder="Employee Name" required>
+            </div>
+
+            <!-- Row 2 -->
+            <div class="form-group">
+                <input type="number" name="working_hours" placeholder="Working Hours (per week)" required>
+                <input type="number" name="tasks_completed" placeholder="Tasks Completed" required>
+            </div>
+
+            <!-- Row 3 -->
+            <div class="form-group">
+                <input type="number" name="breaks" placeholder="Breaks Taken" required>
+                <input type="number" name="satisfaction" placeholder="Satisfaction Level (1-10)" required>
+            </div>
+
+            <button type="submit">Analyze</button>
+        </form>
+
+        <a href="/history">View Prediction History</a>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>© 2025 AI-Based Workforce Productivity & Burnout Analyzer</p>
+            <p>
+                Contact: <a href="mailto:rk331159@gmail.com">rk331159@gmail.com</a> | 
+                Portfolio: <a href="https://portfolioraunakprasad.netlify.app/" target="_blank">Raunak Prasad</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

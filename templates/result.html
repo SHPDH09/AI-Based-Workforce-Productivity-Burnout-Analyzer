@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Analysis Result</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="result-container">
+        <h2>Analysis Result for {{ name }}</h2>
+        <p class="result-risk 
+            {% if risk == 'Low' %}low-risk{% elif risk == 'Medium' %}medium-risk{% elif risk == 'High' %}high-risk{% endif %}">
+            Burnout Risk Level: {{ risk }}
+        </p>
+        <a href="/">Analyze Another Employee</a> |
+        <a href="/history">View Prediction History</a>
+    </div>
+</body>
+</html>
