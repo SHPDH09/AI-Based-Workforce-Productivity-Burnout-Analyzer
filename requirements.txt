@@ -5,3 +5,6 @@ scikit-learn==1.5.2
 joblib
 gunicorn
 flask_sqlalchemy
+psycopg2-binary
+cython<3.0
+numpy==1.26.4
