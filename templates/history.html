@@ -143,14 +143,14 @@
             <tbody>
                 {% for record in records %}
                 <tr>
-                    <td data-label="ID">{{ record[0] }}</td>
-                    <td data-label="Employee Name">{{ record[1] }}</td>
-                    <td data-label="Working Hours">{{ record[2] }}</td>
-                    <td data-label="Tasks Completed">{{ record[3] }}</td>
-                    <td data-label="Breaks">{{ record[4] }}</td>
-                    <td data-label="Satisfaction">{{ record[5] }}</td>
-                    <td data-label="Burnout Risk" class="{% if record[6] == 'Low' %}low-risk{% elif record[6] == 'Medium' %}medium-risk{% else %}high-risk{% endif %}">
-                        {{ record[6] }}
+                    <td data-label="ID">{{ record.id }}</td>
+                    <td data-label="Employee Name">{{ record.name }}</td>
+                    <td data-label="Working Hours">{{ record.working_hours }}</td>
+                    <td data-label="Tasks Completed">{{ record.tasks_completed }}</td>
+                    <td data-label="Breaks">{{ record.breaks }}</td>
+                    <td data-label="Satisfaction">{{ record.satisfaction }}</td>
+                    <td data-label="Burnout Risk" class="{% if record.prediction == 'Low' %}low-risk{% elif record.prediction == 'Medium' %}medium-risk{% else %}high-risk{% endif %}">
+                        {{ record.prediction }}
                     </td>
                 </tr>
                 {% endfor %}
