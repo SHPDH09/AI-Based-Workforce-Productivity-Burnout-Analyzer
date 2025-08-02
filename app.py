@@ -1,8 +1,8 @@
 from flask import Flask, render_template, request
 import joblib
 import numpy as np
-import sqlite3
 import os
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
@@ -12,23 +12,30 @@ if not os.path.exists(model_path):
     raise FileNotFoundError("Model file not found! Please train the model first using model_train.py.")
 model = joblib.load(model_path)
 
-# Database initialization
-def init_db():
-    conn = sqlite3.connect('employee_results.db')
-    cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS results (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        name TEXT,
-                        working_hours INTEGER,
-                        tasks_completed INTEGER,
-                        breaks INTEGER,
-                        satisfaction INTEGER,
-                        prediction TEXT
-                    )''')
-    conn.commit()
-    conn.close()
+# Database configuration
+db_url = os.getenv('DATABASE_URL')
+if db_url and db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://")
 
-init_db()
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url or 'sqlite:///employee_results.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+
+# Database model
+class Result(db.Model):
+    __tablename__ = 'results'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(100), nullable=False)
+    working_hours = db.Column(db.Integer, nullable=False)
+    tasks_completed = db.Column(db.Integer, nullable=False)
+    breaks = db.Column(db.Integer, nullable=False)
+    satisfaction = db.Column(db.Integer, nullable=False)
+    prediction = db.Column(db.String(50), nullable=False)
+
+# Create tables
+with app.app_context():
+    db.create_all()
 
 # Home route
 @app.route('/')
@@ -52,14 +59,16 @@ def predict():
         risk_level = risk_map.get(prediction, 'Unknown')
 
         # Save result in DB
-        conn = sqlite3.connect('employee_results.db')
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO results (name, working_hours, tasks_completed, breaks, satisfaction, prediction) VALUES (?, ?, ?, ?, ?, ?)",
-            (name, hours, tasks, breaks, satisfaction, risk_level)
+        result = Result(
+            name=name,
+            working_hours=hours,
+            tasks_completed=tasks,
+            breaks=breaks,
+            satisfaction=satisfaction,
+            prediction=risk_level
         )
-        conn.commit()
-        conn.close()
+        db.session.add(result)
+        db.session.commit()
 
         return render_template('result.html', name=name, risk=risk_level)
 
@@ -69,12 +78,8 @@ def predict():
 # Route to view previous results
 @app.route('/history')
 def history():
-    conn = sqlite3.connect('employee_results.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM results")
-    rows = cursor.fetchall()
-    conn.close()
-    return render_template('history.html', records=rows)
+    records = Result.query.all()
+    return render_template('history.html', records=records)
 
 if __name__ == "__main__":
     app.run(debug=True)
