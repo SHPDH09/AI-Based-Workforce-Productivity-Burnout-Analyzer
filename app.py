@@ -35,7 +35,7 @@ with engine.connect() as conn:
     )
     """))
 
-# Custom CSS
+# Custom CSS for risk levels and layout
 st.markdown("""
     <style>
         body {
@@ -43,9 +43,9 @@ st.markdown("""
             background: linear-gradient(135deg, #d4af37, #c0c0c0);
             color: #000;
         }
-        .result-container {
+        .container {
             background: rgba(255, 255, 255, 0.95);
-            padding: 35px;
+            padding: 35px 40px;
             border-radius: 16px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
             width: 500px;
@@ -60,16 +60,28 @@ st.markdown("""
             padding: 10px;
             border-radius: 8px;
         }
-        .low-risk { background: #d4edda; color: #155724; }
-        .medium-risk { background: #fff3cd; color: #856404; }
-        .high-risk { background: #f8d7da; color: #721c24; }
-        .result-container a {
+        .low-risk {
+            background: #d4edda;
+            color: #155724;
+        }
+        .medium-risk {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .high-risk {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .result-buttons a {
+            display: inline-block;
             margin: 10px;
             text-decoration: none;
             font-weight: bold;
             color: #007bff;
         }
-        .result-container a:hover { filter: blur(1px); }
+        .result-buttons a:hover {
+            filter: blur(1px);
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -77,7 +89,9 @@ st.markdown("""
 menu = st.sidebar.selectbox("Menu", ["Predict", "History"])
 
 if menu == "Predict":
-    st.markdown("<h1 style='text-align:center;'>AI-Based Workforce Productivity & Burnout Analyzer</h1>", unsafe_allow_html=True)
+    st.markdown('<div class="container">', unsafe_allow_html=True)
+    st.markdown("<h1>AI-Based Workforce Productivity & Burnout Analyzer</h1>", unsafe_allow_html=True)
+    st.markdown("<p>Enter employee details to analyze productivity and burnout risk.</p>", unsafe_allow_html=True)
 
     name = st.text_input("Employee Name")
     hours = st.number_input("Working Hours (per week)", min_value=0)
@@ -109,15 +123,17 @@ if menu == "Predict":
                     "prediction": risk_level
                 })
 
-            # Display result like result.html
+            # Show result like result.html
             st.markdown(f"""
-                <div class="result-container">
+                <div class="container">
                     <h2>Analysis Result for {name}</h2>
                     <p class="result-risk {'low-risk' if risk_level=='Low' else 'medium-risk' if risk_level=='Medium' else 'high-risk'}">
                         Burnout Risk Level: {risk_level}
                     </p>
-                    <a href="#">Analyze Another Employee</a> |
-                    <a href="#">View Prediction History</a>
+                    <div class="result-buttons">
+                        <a href="#">🔄 Analyze Another Employee</a> |
+                        <a href="#">📜 View Prediction History</a>
+                    </div>
                 </div>
             """, unsafe_allow_html=True)
 
