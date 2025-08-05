@@ -8,3 +8,5 @@ flask_sqlalchemy
 psycopg2-binary
 cython<3.0
 numpy==1.26.4
+streamlit
+flask
