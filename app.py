@@ -35,7 +35,7 @@ with engine.connect() as conn:
     )
     """))
 
-# Custom CSS to match your design
+# Custom CSS
 st.markdown("""
     <style>
         body {
@@ -58,11 +58,9 @@ st.markdown("""
             margin-bottom: 8px;
             color: #000;
         }
-        p {
-            font-size: 14px;
-            margin-bottom: 20px;
-            color: #000;
-        }
+        .result-risk.low {color: green; font-weight: bold;}
+        .result-risk.medium {color: orange; font-weight: bold;}
+        .result-risk.high {color: red; font-weight: bold;}
         .stButton button {
             width: 100%;
             padding: 12px;
@@ -101,7 +99,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Sidebar menu
-menu = st.sidebar.selectbox("Menu", ["Predict", "History"])
+menu = st.sidebar.selectbox("Menu", ["Predict", "Result", "History"])
 
 if menu == "Predict":
     st.markdown('<div class="container">', unsafe_allow_html=True)
@@ -137,10 +135,10 @@ if menu == "Predict":
                     "prediction": risk_level
                 })
 
+            st.session_state["last_result"] = {"name": name, "risk": risk_level}
             st.success(f"Burnout Risk for {name}: {risk_level}")
 
-    st.markdown(
-        """
+    st.markdown("""
         <div class="footer">
             <p>© 2025 AI-Based Workforce Productivity & Burnout Analyzer</p>
             <p>
@@ -149,9 +147,21 @@ if menu == "Predict":
             </p>
         </div>
         </div>
-        """,
-        unsafe_allow_html=True
-    )
+    """, unsafe_allow_html=True)
+
+elif menu == "Result":
+    if "last_result" in st.session_state:
+        result = st.session_state["last_result"]
+        risk_class = "low" if result["risk"] == "Low" else "medium" if result["risk"] == "Medium" else "high"
+        st.markdown(f"""
+            <div class="container">
+                <h2>Analysis Result for {result["name"]}</h2>
+                <p class="result-risk {risk_class}">Burnout Risk Level: {result["risk"]}</p>
+                <p><a href="/">Analyze Another Employee</a></p>
+            </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.warning("No result available. Please analyze first in 'Predict' section.")
 
 elif menu == "History":
     st.subheader("Prediction History")
