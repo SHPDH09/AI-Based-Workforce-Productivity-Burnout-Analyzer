@@ -1,15 +1,16 @@
-from flask import Flask, render_template, request
+import streamlit as st
 import joblib
 import numpy as np
 import os
-from flask_sqlalchemy import SQLAlchemy
-
-app = Flask(__name__)
+import pandas as pd
+from sqlalchemy import create_engine
 
 # Load ML model
 model_path = 'model/burnout_model.pkl'
 if not os.path.exists(model_path):
-    raise FileNotFoundError("Model file not found! Please train the model first using model_train.py.")
+    st.error("Model file not found! Please train the model first using model_train.py.")
+    st.stop()
+
 model = joblib.load(model_path)
 
 # Database configuration
@@ -17,41 +18,38 @@ db_url = os.getenv('DATABASE_URL')
 if db_url and db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://")
 
-app.config['SQLALCHEMY_DATABASE_URI'] = db_url or 'sqlite:///employee_results.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db_url = db_url or 'sqlite:///employee_results.db'
+engine = create_engine(db_url)
 
-db = SQLAlchemy(app)
+# Create table if not exists
+with engine.connect() as conn:
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS results (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        working_hours INTEGER NOT NULL,
+        tasks_completed INTEGER NOT NULL,
+        breaks INTEGER NOT NULL,
+        satisfaction INTEGER NOT NULL,
+        prediction TEXT NOT NULL
+    )
+    """)
 
-# Database model
-class Result(db.Model):
-    __tablename__ = 'results'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(100), nullable=False)
-    working_hours = db.Column(db.Integer, nullable=False)
-    tasks_completed = db.Column(db.Integer, nullable=False)
-    breaks = db.Column(db.Integer, nullable=False)
-    satisfaction = db.Column(db.Integer, nullable=False)
-    prediction = db.Column(db.String(50), nullable=False)
+# Streamlit UI
+st.title("AI-Based Workforce Productivity & Burnout Analyzer")
 
-# Create tables
-with app.app_context():
-    db.create_all()
+menu = st.sidebar.selectbox("Menu", ["Predict", "History"])
 
-# Home route
-@app.route('/')
-def home():
-    return render_template('index.html')
+if menu == "Predict":
+    st.subheader("Employee Burnout Risk Prediction")
 
-# Prediction route
-@app.route('/predict', methods=['POST'])
-def predict():
-    try:
-        name = request.form['name']
-        hours = int(request.form['working_hours'])
-        tasks = int(request.form['tasks_completed'])
-        breaks = int(request.form['breaks'])
-        satisfaction = int(request.form['satisfaction'])
+    name = st.text_input("Employee Name")
+    hours = st.number_input("Working Hours", min_value=0)
+    tasks = st.number_input("Tasks Completed", min_value=0)
+    breaks = st.number_input("Breaks Taken", min_value=0)
+    satisfaction = st.slider("Satisfaction Level (1-10)", 1, 10, 5)
 
+    if st.button("Predict"):
         features = np.array([[hours, tasks, breaks, satisfaction]])
         prediction = model.predict(features)[0]
 
@@ -59,27 +57,15 @@ def predict():
         risk_level = risk_map.get(prediction, 'Unknown')
 
         # Save result in DB
-        result = Result(
-            name=name,
-            working_hours=hours,
-            tasks_completed=tasks,
-            breaks=breaks,
-            satisfaction=satisfaction,
-            prediction=risk_level
-        )
-        db.session.add(result)
-        db.session.commit()
+        with engine.begin() as conn:
+            conn.execute("""
+                INSERT INTO results (name, working_hours, tasks_completed, breaks, satisfaction, prediction)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (name, hours, tasks, breaks, satisfaction, risk_level))
 
-        return render_template('result.html', name=name, risk=risk_level)
+        st.success(f"Burnout Risk for {name}: {risk_level}")
 
-    except Exception as e:
-        return f"Error: {str(e)}"
-
-# Route to view previous results
-@app.route('/history')
-def history():
-    records = Result.query.all()
-    return render_template('history.html', records=records)
-
-if __name__ == "__main__":
-    app.run(debug=True)
+elif menu == "History":
+    st.subheader("Prediction History")
+    df = pd.read_sql("SELECT * FROM results", engine)
+    st.dataframe(df)
