@@ -43,9 +43,9 @@ st.markdown("""
             background: linear-gradient(135deg, #d4af37, #c0c0c0);
             color: #000;
         }
-        .container {
+        .result-container {
             background: rgba(255, 255, 255, 0.95);
-            padding: 35px 40px;
+            padding: 35px;
             border-radius: 16px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
             width: 500px;
@@ -53,58 +53,31 @@ st.markdown("""
             text-align: center;
             margin: 50px auto;
         }
-        h1 {
-            font-size: 22px;
-            margin-bottom: 8px;
-            color: #000;
-        }
-        .result-risk.low {color: green; font-weight: bold;}
-        .result-risk.medium {color: orange; font-weight: bold;}
-        .result-risk.high {color: red; font-weight: bold;}
-        .stButton button {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #007bff, #0056b3);
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .stButton button:hover {
-            background: linear-gradient(135deg, #0056b3, #007bff);
-            box-shadow: 0 0 10px rgba(0, 123, 255, 0.6);
-            transform: scale(1.03);
-        }
-        .footer {
+        .result-risk {
+            font-size: 20px;
+            font-weight: bold;
             margin-top: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #000;
-            font-weight: bold;
+            padding: 10px;
             border-radius: 8px;
-            padding: 8px;
-            font-size: 13px;
         }
-        .footer a {
-            color: #007bff;
+        .low-risk { background: #d4edda; color: #155724; }
+        .medium-risk { background: #fff3cd; color: #856404; }
+        .high-risk { background: #f8d7da; color: #721c24; }
+        .result-container a {
+            margin: 10px;
             text-decoration: none;
-            margin: 0 5px;
             font-weight: bold;
+            color: #007bff;
         }
-        .footer a:hover {
-            filter: blur(1px);
-        }
+        .result-container a:hover { filter: blur(1px); }
     </style>
 """, unsafe_allow_html=True)
 
 # Sidebar menu
-menu = st.sidebar.selectbox("Menu", ["Predict", "Result", "History"])
+menu = st.sidebar.selectbox("Menu", ["Predict", "History"])
 
 if menu == "Predict":
-    st.markdown('<div class="container">', unsafe_allow_html=True)
-    st.markdown("<h1>AI-Based Workforce Productivity & Burnout Analyzer</h1>", unsafe_allow_html=True)
-    st.markdown("<p>Enter employee details to analyze productivity and burnout risk.</p>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align:center;'>AI-Based Workforce Productivity & Burnout Analyzer</h1>", unsafe_allow_html=True)
 
     name = st.text_input("Employee Name")
     hours = st.number_input("Working Hours (per week)", min_value=0)
@@ -118,6 +91,7 @@ if menu == "Predict":
         else:
             features = np.array([[hours, tasks, breaks, satisfaction]])
             prediction = model.predict(features)[0]
+
             risk_map = {0: 'Low', 1: 'Medium', 2: 'High'}
             risk_level = risk_map.get(prediction, 'Unknown')
 
@@ -135,33 +109,17 @@ if menu == "Predict":
                     "prediction": risk_level
                 })
 
-            st.session_state["last_result"] = {"name": name, "risk": risk_level}
-            st.success(f"Burnout Risk for {name}: {risk_level}")
-
-    st.markdown("""
-        <div class="footer">
-            <p>© 2025 AI-Based Workforce Productivity & Burnout Analyzer</p>
-            <p>
-                Contact: <a href="mailto:rk331159@gmail.com">rk331159@gmail.com</a> |
-                Portfolio: <a href="https://portfolioraunakprasad.netlify.app/" target="_blank">Raunak Prasad</a>
-            </p>
-        </div>
-        </div>
-    """, unsafe_allow_html=True)
-
-elif menu == "Result":
-    if "last_result" in st.session_state:
-        result = st.session_state["last_result"]
-        risk_class = "low" if result["risk"] == "Low" else "medium" if result["risk"] == "Medium" else "high"
-        st.markdown(f"""
-            <div class="container">
-                <h2>Analysis Result for {result["name"]}</h2>
-                <p class="result-risk {risk_class}">Burnout Risk Level: {result["risk"]}</p>
-                <p><a href="/">Analyze Another Employee</a></p>
-            </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.warning("No result available. Please analyze first in 'Predict' section.")
+            # Display result like result.html
+            st.markdown(f"""
+                <div class="result-container">
+                    <h2>Analysis Result for {name}</h2>
+                    <p class="result-risk {'low-risk' if risk_level=='Low' else 'medium-risk' if risk_level=='Medium' else 'high-risk'}">
+                        Burnout Risk Level: {risk_level}
+                    </p>
+                    <a href="#">Analyze Another Employee</a> |
+                    <a href="#">View Prediction History</a>
+                </div>
+            """, unsafe_allow_html=True)
 
 elif menu == "History":
     st.subheader("Prediction History")
