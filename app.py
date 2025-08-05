@@ -3,7 +3,7 @@ import joblib
 import numpy as np
 import os
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text  # Added text
 
 # Load ML model
 model_path = 'model/burnout_model.pkl'
@@ -23,7 +23,7 @@ engine = create_engine(db_url)
 
 # Create table if not exists
 with engine.connect() as conn:
-    conn.execute("""
+    conn.execute(text("""
     CREATE TABLE IF NOT EXISTS results (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -33,7 +33,7 @@ with engine.connect() as conn:
         satisfaction INTEGER NOT NULL,
         prediction TEXT NOT NULL
     )
-    """)
+    """))
 
 # Streamlit UI
 st.title("AI-Based Workforce Productivity & Burnout Analyzer")
@@ -58,10 +58,17 @@ if menu == "Predict":
 
         # Save result in DB
         with engine.begin() as conn:
-            conn.execute("""
+            conn.execute(text("""
                 INSERT INTO results (name, working_hours, tasks_completed, breaks, satisfaction, prediction)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (name, hours, tasks, breaks, satisfaction, risk_level))
+                VALUES (:name, :hours, :tasks, :breaks, :satisfaction, :prediction)
+            """), {
+                "name": name,
+                "hours": hours,
+                "tasks": tasks,
+                "breaks": breaks,
+                "satisfaction": satisfaction,
+                "prediction": risk_level
+            })
 
         st.success(f"Burnout Risk for {name}: {risk_level}")
 
