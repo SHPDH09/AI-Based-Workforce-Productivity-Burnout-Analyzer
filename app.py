@@ -35,7 +35,7 @@ with engine.connect() as conn:
     )
     """))
 
-# Custom CSS for risk levels and layout
+# Custom CSS to match your design
 st.markdown("""
     <style>
         body {
@@ -53,33 +53,48 @@ st.markdown("""
             text-align: center;
             margin: 50px auto;
         }
-        .result-risk {
-            font-size: 20px;
-            font-weight: bold;
+        h1 {
+            font-size: 22px;
+            margin-bottom: 8px;
+            color: #000;
+        }
+        p {
+            font-size: 14px;
+            margin-bottom: 20px;
+            color: #000;
+        }
+        .stButton button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .stButton button:hover {
+            background: linear-gradient(135deg, #0056b3, #007bff);
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.6);
+            transform: scale(1.03);
+        }
+        .footer {
             margin-top: 20px;
-            padding: 10px;
-            border-radius: 8px;
-        }
-        .low-risk {
-            background: #d4edda;
-            color: #155724;
-        }
-        .medium-risk {
-            background: #fff3cd;
-            color: #856404;
-        }
-        .high-risk {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .result-buttons a {
-            display: inline-block;
-            margin: 10px;
-            text-decoration: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
             font-weight: bold;
-            color: #007bff;
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 13px;
         }
-        .result-buttons a:hover {
+        .footer a {
+            color: #007bff;
+            text-decoration: none;
+            margin: 0 5px;
+            font-weight: bold;
+        }
+        .footer a:hover {
             filter: blur(1px);
         }
     </style>
@@ -105,7 +120,6 @@ if menu == "Predict":
         else:
             features = np.array([[hours, tasks, breaks, satisfaction]])
             prediction = model.predict(features)[0]
-
             risk_map = {0: 'Low', 1: 'Medium', 2: 'High'}
             risk_level = risk_map.get(prediction, 'Unknown')
 
@@ -123,19 +137,21 @@ if menu == "Predict":
                     "prediction": risk_level
                 })
 
-            # Show result like result.html
-            st.markdown(f"""
-                <div class="container">
-                    <h2>Analysis Result for {name}</h2>
-                    <p class="result-risk {'low-risk' if risk_level=='Low' else 'medium-risk' if risk_level=='Medium' else 'high-risk'}">
-                        Burnout Risk Level: {risk_level}
-                    </p>
-                    <div class="result-buttons">
-                        <a href="#">🔄 Analyze Another Employee</a> |
-                        <a href="#">📜 View Prediction History</a>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
+            st.success(f"Burnout Risk for {name}: {risk_level}")
+
+    st.markdown(
+        """
+        <div class="footer">
+            <p>© 2025 AI-Based Workforce Productivity & Burnout Analyzer</p>
+            <p>
+                Contact: <a href="mailto:rk331159@gmail.com">rk331159@gmail.com</a> |
+                Portfolio: <a href="https://portfolioraunakprasad.netlify.app/" target="_blank">Raunak Prasad</a>
+            </p>
+        </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 elif menu == "History":
     st.subheader("Prediction History")
