@@ -35,61 +35,73 @@ with engine.connect() as conn:
     )
     """))
 
-# Custom CSS for styling
+# Custom CSS for risk levels and layout
 st.markdown("""
     <style>
-    .main-title {
-        font-size: 40px;
-        color: #2E86C1;
-        text-align: center;
-        margin-bottom: 20px;
-    }
-    .sub-title {
-        font-size: 24px;
-        color: #1F618D;
-        margin-top: 20px;
-        margin-bottom: 10px;
-    }
-    .result-box {
-        padding: 20px;
-        background-color: #F2F3F4;
-        border-radius: 10px;
-        text-align: center;
-        font-size: 22px;
-        font-weight: bold;
-        color: #154360;
-        margin-top: 20px;
-    }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #d4af37, #c0c0c0);
+            color: #000;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 35px 40px;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            width: 500px;
+            max-width: 95%;
+            text-align: center;
+            margin: 50px auto;
+        }
+        .result-risk {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .low-risk {
+            background: #d4edda;
+            color: #155724;
+        }
+        .medium-risk {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .high-risk {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .result-buttons a {
+            display: inline-block;
+            margin: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .result-buttons a:hover {
+            filter: blur(1px);
+        }
     </style>
 """, unsafe_allow_html=True)
 
-# Streamlit UI
-st.markdown('<div class="main-title">AI-Based Workforce Productivity & Burnout Analyzer</div>', unsafe_allow_html=True)
+# Sidebar menu
+menu = st.sidebar.selectbox("Menu", ["Predict", "History"])
 
-menu = st.sidebar.radio("📌 Navigation", ["🏠 Home", "📊 Predict", "📜 History"])
+if menu == "Predict":
+    st.markdown('<div class="container">', unsafe_allow_html=True)
+    st.markdown("<h1>AI-Based Workforce Productivity & Burnout Analyzer</h1>", unsafe_allow_html=True)
+    st.markdown("<p>Enter employee details to analyze productivity and burnout risk.</p>", unsafe_allow_html=True)
 
-if menu == "🏠 Home":
-    st.markdown('<div class="sub-title">Welcome to the Burnout Analyzer</div>', unsafe_allow_html=True)
-    st.write("This tool helps predict employee burnout levels based on working hours, tasks completed, breaks taken, and satisfaction levels.")
-    st.image("https://cdn-icons-png.flaticon.com/512/2920/2920244.png", width=200)
-    st.write("Use the sidebar to navigate to Prediction or History sections.")
+    name = st.text_input("Employee Name")
+    hours = st.number_input("Working Hours (per week)", min_value=0)
+    tasks = st.number_input("Tasks Completed", min_value=0)
+    breaks = st.number_input("Breaks Taken", min_value=0)
+    satisfaction = st.slider("Satisfaction Level (1-10)", 1, 10, 5)
 
-elif menu == "📊 Predict":
-    st.markdown('<div class="sub-title">Employee Burnout Risk Prediction</div>', unsafe_allow_html=True)
-
-    col1, col2 = st.columns(2)
-    with col1:
-        name = st.text_input("👤 Employee Name")
-        hours = st.number_input("⏱ Working Hours", min_value=0)
-    with col2:
-        tasks = st.number_input("✅ Tasks Completed", min_value=0)
-        breaks = st.number_input("☕ Breaks Taken", min_value=0)
-
-    satisfaction = st.slider("😊 Satisfaction Level (1-10)", 1, 10, 5)
-
-    if st.button("🔍 Predict"):
+    if st.button("Analyze"):
         if name.strip() == "":
-            st.error("Please enter employee name.")
+            st.error("Please enter the employee name.")
         else:
             features = np.array([[hours, tasks, breaks, satisfaction]])
             prediction = model.predict(features)[0]
@@ -97,7 +109,7 @@ elif menu == "📊 Predict":
             risk_map = {0: 'Low', 1: 'Medium', 2: 'High'}
             risk_level = risk_map.get(prediction, 'Unknown')
 
-            # Save result in DB
+            # Save to DB
             with engine.begin() as conn:
                 conn.execute(text("""
                     INSERT INTO results (name, working_hours, tasks_completed, breaks, satisfaction, prediction)
@@ -111,9 +123,21 @@ elif menu == "📊 Predict":
                     "prediction": risk_level
                 })
 
-            st.markdown(f'<div class="result-box">Burnout Risk for {name}: {risk_level}</div>', unsafe_allow_html=True)
+            # Show result like result.html
+            st.markdown(f"""
+                <div class="container">
+                    <h2>Analysis Result for {name}</h2>
+                    <p class="result-risk {'low-risk' if risk_level=='Low' else 'medium-risk' if risk_level=='Medium' else 'high-risk'}">
+                        Burnout Risk Level: {risk_level}
+                    </p>
+                    <div class="result-buttons">
+                        <a href="#">🔄 Analyze Another Employee</a> |
+                        <a href="#">📜 View Prediction History</a>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
 
-elif menu == "📜 History":
-    st.markdown('<div class="sub-title">Prediction History</div>', unsafe_allow_html=True)
+elif menu == "History":
+    st.subheader("Prediction History")
     df = pd.read_sql("SELECT * FROM results", engine)
-    st.dataframe(df, use_container_width=True)
+    st.dataframe(df)
