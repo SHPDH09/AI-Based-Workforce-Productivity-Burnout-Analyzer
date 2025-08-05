@@ -105,6 +105,7 @@ menu = st.sidebar.selectbox("Menu", ["Predict", "History"])
 if "show_result" not in st.session_state:
     st.session_state.show_result = False
 
+# PREDICT PAGE
 if menu == "Predict":
     if not st.session_state.show_result:
         st.markdown('<div class="container">', unsafe_allow_html=True)
@@ -154,6 +155,21 @@ if menu == "Predict":
             </div>
             </div>
         """, unsafe_allow_html=True)
+    else:
+        # Show result directly after prediction
+        result = st.session_state.last_result
+        risk_class = "low" if result["risk"] == "Low" else "medium" if result["risk"] == "Medium" else "high"
+        st.markdown(f"""
+            <div class="container">
+                <h2>Analysis Result for {result["name"]}</h2>
+                <p class="result-risk {risk_class}">Burnout Risk Level: {result["risk"]}</p>
+            </div>
+        """, unsafe_allow_html=True)
+        if st.button("Analyze Another Employee"):
+            st.session_state.show_result = False
+            st.rerun()
+
+# HISTORY PAGE
 elif menu == "History":
     st.subheader("Prediction History")
 
@@ -184,32 +200,3 @@ elif menu == "History":
             st.download_button("Download History as CSV", csv, "prediction_history.csv", "text/csv")
     except Exception as e:
         st.error(f"Error loading history: {e}")
-else:
-        # Show result directly after prediction
-        result = st.session_state.last_result
-        risk_class = "low" if result["risk"] == "Low" else "medium" if result["risk"] == "Medium" else "high"
-        st.markdown(f"""
-            <div class="container">
-                <h2>Analysis Result for {result["name"]}</h2>
-                <p class="result-risk {risk_class}">Burnout Risk Level: {result["risk"]}</p>
-            </div>
-        """, unsafe_allow_html=True)
-        if st.button("Analyze Another Employee"):
-            st.session_state.show_result = False
-            st.rerun()
-
-elif menu == "History":
-    st.subheader("Prediction History")
-    df = pd.read_sql("SELECT * FROM results", engine)
-
-    # Color risk column
-    def color_risk(val):
-        if val == "Low":
-            return "color: green; font-weight: bold;"
-        elif val == "Medium":
-            return "color: orange; font-weight: bold;"
-        elif val == "High":
-            return "color: red; font-weight: bold;"
-        return ""
-
-    st.dataframe(df.style.applymap(color_risk, subset=["prediction"]))
