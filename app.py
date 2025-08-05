@@ -98,9 +98,10 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Sidebar menu (Removed Result)
+# Sidebar menu
 menu = st.sidebar.selectbox("Menu", ["Predict", "History"])
 
+# Initialize session state
 if "show_result" not in st.session_state:
     st.session_state.show_result = False
 
@@ -141,7 +142,7 @@ if menu == "Predict":
 
                 st.session_state.last_result = {"name": name, "risk": risk_level}
                 st.session_state.show_result = True
-                st.experimental_rerun()
+                st.rerun()
 
         st.markdown("""
             <div class="footer">
@@ -154,21 +155,31 @@ if menu == "Predict":
             </div>
         """, unsafe_allow_html=True)
     else:
-        # Show Result directly after prediction
+        # Show result directly after prediction
         result = st.session_state.last_result
         risk_class = "low" if result["risk"] == "Low" else "medium" if result["risk"] == "Medium" else "high"
         st.markdown(f"""
             <div class="container">
                 <h2>Analysis Result for {result["name"]}</h2>
                 <p class="result-risk {risk_class}">Burnout Risk Level: {result["risk"]}</p>
-                <p><a href="#" onclick="window.location.reload()">Analyze Another Employee</a></p>
             </div>
         """, unsafe_allow_html=True)
         if st.button("Analyze Another Employee"):
             st.session_state.show_result = False
-            st.experimental_rerun()
+            st.rerun()
 
 elif menu == "History":
     st.subheader("Prediction History")
     df = pd.read_sql("SELECT * FROM results", engine)
-    st.dataframe(df)
+
+    # Color risk column
+    def color_risk(val):
+        if val == "Low":
+            return "color: green; font-weight: bold;"
+        elif val == "Medium":
+            return "color: orange; font-weight: bold;"
+        elif val == "High":
+            return "color: red; font-weight: bold;"
+        return ""
+
+    st.dataframe(df.style.applymap(color_risk, subset=["prediction"]))
