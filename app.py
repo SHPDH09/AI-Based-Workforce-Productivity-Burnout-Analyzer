@@ -154,7 +154,37 @@ if menu == "Predict":
             </div>
             </div>
         """, unsafe_allow_html=True)
-    else:
+elif menu == "History":
+    st.subheader("Prediction History")
+
+    # Debug: Show database URL
+    st.caption(f"Connected to Database: {db_url}")
+
+    try:
+        with engine.connect() as conn:
+            df = pd.read_sql("SELECT * FROM results", conn)
+
+        if df.empty:
+            st.warning("No prediction history found yet. Please analyze an employee first.")
+        else:
+            # Color risk column
+            def color_risk(val):
+                if val == "Low":
+                    return "color: green; font-weight: bold;"
+                elif val == "Medium":
+                    return "color: orange; font-weight: bold;"
+                elif val == "High":
+                    return "color: red; font-weight: bold;"
+                return ""
+
+            st.dataframe(df.style.applymap(color_risk, subset=["prediction"]))
+
+            # Optional: Download button
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button("Download History as CSV", csv, "prediction_history.csv", "text/csv")
+    except Exception as e:
+        st.error(f"Error loading history: {e}")
+else:
         # Show result directly after prediction
         result = st.session_state.last_result
         risk_class = "low" if result["risk"] == "Low" else "medium" if result["risk"] == "Medium" else "high"
